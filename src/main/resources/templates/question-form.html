@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Deep Study with AI</title>
+</head>
+<body>
+
+<h2>궁금한 점을 입력하세요</h2>
+
+<form method="post" action="/questions">
+    <textarea name="question"
+              rows="5"
+              cols="80"
+              placeholder="예: USIM 칩은 어떤 정보를 가지고 있나요?"
+              th:text="${question}">
+    </textarea>
+    <br><br>
+    <button type="submit">질문하기</button>
+</form>
+
+<hr>
+
+<div th:if="${aiAnswer}">
+    <h3>AI 답변</h3>
+    <pre th:text="${aiAnswer}"></pre>
+</div>
+
+</body>
+</html>
