@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>질문 상세 - Deep Study with AI</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body>
+
+<main class="container mt-5">
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <header class="text-center mb-4">
+        <h1>질문 상세</h1>
+        <p class="lead">AI가 답변한 내용입니다.</p>
+    </header>
+
+    <div th:if="${question}" class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h5 mb-0" th:text="${question.topic.title}"></h2>
+        </div>
+        <div class="card-body">
+            <h3 class="h6 card-title mb-3">질문 내용:</h3>
+            <p class="card-text" th:text="${question.content}"></p>
+            <p class="text-muted text-end"><small>작성일: <span th:text="${#temporals.format(question.createdAt, 'yyyy-MM-dd HH:mm')}"></span></small></p>
+        </div>
+    </div>
+
+    <div th:if="${question.answer}" class="card mb-4">
+        <div class="card-header">
+            <h3 class="h5 mb-0">AI 답변</h3>
+        </div>
+        <div class="card-body bg-light">
+            <pre class="card-text" style="white-space: pre-wrap; word-wrap: break-word;" th:text="${question.answer.aiContent}"></pre>
+        </div>
+    </div>
+    <div th:unless="${question.answer}" class="alert alert-warning mt-4" role="alert">
+        아직 AI 답변이 생성되지 않았습니다. 잠시 후 다시 확인해주세요.
+    </div>
+
+    <div th:if="${question.answer}" class="card mt-4">
+        <div class="card-header">
+            <h3 class="h5 mb-0">나만의 요약</h3>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/questions/{id}/summary(id=${question.id})}" method="post">
+                <input type="hidden" name="answerId" th:value="${question.answer.id}"/>
+                <div class="mb-3">
+                    <label for="userSummary" class="form-label">요약 내용:</label>
+                    <textarea class="form-control" id="userSummary" name="userSummary" rows="5"
+                              th:text="${question.answer.userSummary}"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">요약 저장</button>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${question.answer != null and not #strings.isEmpty(question.answer.userSummary)}" class="card mt-4">
+        <div class="card-header">
+            <h3 class="h5 mb-0">추가 질문하기</h3>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/questions/{id}/add-question(id=${question.id})}" method="post">
+                <input type="hidden" name="topicId" th:value="${question.topic.id}"/>
+                <div class="mb-3">
+                    <label for="additionalQuestionContent" class="form-label">추가 질문 내용:</label>
+                    <textarea class="form-control" id="additionalQuestionContent" name="content" rows="3"
+                              placeholder="AI 답변 내용 중 궁금한 점을 추가 질문해보세요." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">추가 질문하기</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="mt-4 text-center">
+        <a href="/questions/form" class="btn btn-secondary">새로운 질문하기</a>
+    </div>
+
+</main>
+
+<footer class="text-center text-muted py-4 mt-5">
+    <p>&copy; 2026 DeepStudyWithAI. All Rights Reserved.</p>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+</html>

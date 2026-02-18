@@ -31,6 +31,10 @@ public class Topic extends BaseEntity {
     @OneToMany(mappedBy = "topic")
     private List<Question> questions = new ArrayList<>();
 
+    public Topic(String title) {
+        this.title = title;
+    }
+
     public Topic(String title, Topic parent) {
         this.title = title;
         this.parent = parent;
