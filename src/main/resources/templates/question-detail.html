@@ -7,6 +7,24 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <style>
+        .markdown-body {
+            line-height: 1.6;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .markdown-body p {
+            margin-bottom: 1rem;
+        }
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -41,7 +59,7 @@
             <h3 class="h5 mb-0">AI 답변</h3>
         </div>
         <div class="card-body bg-light">
-            <pre class="card-text" style="white-space: pre-wrap; word-wrap: break-word;" th:text="${question.answer.aiContent}"></pre>
+            <div id="ai-content" class="markdown-body" th:attr="data-markdown=${question.answer.aiContent}"></div>
         </div>
     </div>
     <div th:unless="${question.answer}" class="alert alert-warning mt-4" role="alert">
@@ -84,7 +102,7 @@
 
 
     <div class="mt-4 text-center">
-        <a href="/questions/form" class="btn btn-secondary">새로운 질문하기</a>
+        <a href="/topics" class="btn btn-secondary">토픽 목록으로</a>
     </div>
 
 </main>
@@ -97,5 +115,16 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const aiContent = document.getElementById('ai-content');
+        if (aiContent) {
+            const rawMarkdown = aiContent.getAttribute('data-markdown');
+            const cleanHtml = DOMPurify.sanitize(marked.parse(rawMarkdown));
+            aiContent.innerHTML = cleanHtml;
+        }
+    });
+</script>
 </body>
 </html>

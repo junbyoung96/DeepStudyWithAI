@@ -7,10 +7,17 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
     <style>
         .question-card { border-left: 5px solid #0d6efd; }
         .answer-card { border-left: 5px solid #198754; background-color: #f8f9fa; }
         .summary-card { border-left: 5px solid #ffc107; }
+        .markdown-body { line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 1rem; margin-bottom: 0.5rem; }
+        .markdown-body p { margin-bottom: 0.5rem; }
+        .markdown-body ul, .markdown-body ol { margin-bottom: 0.5rem; }
     </style>
 </head>
 <body>
@@ -20,7 +27,6 @@
         <a class="navbar-brand" href="/">Deep Study with AI</a>
         <div class="navbar-nav">
             <a class="nav-link" href="/topics/new">새 토픽</a>
-            <a class="nav-link" href="/questions/form">질문하기</a>
         </div>
     </div>
 </nav>
@@ -35,9 +41,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <header class="mb-4">
-        <h1 th:text="${topic.title}">토픽 제목</h1>
-        <p class="text-muted">이 토픽에서 나눈 대화 내역입니다.</p>
+    <header class="mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h1 th:text="${topic.title}">토픽 제목</h1>
+            <p class="text-muted">이 토픽에서 나눈 대화 내역입니다.</p>
+        </div>
+        <form th:action="@{/topics/{id}/delete(id=${topic.id})}" method="post" onsubmit="return confirm('이 토픽을 삭제하시겠습니까? 관련된 모든 질문과 답변이 삭제됩니다.');">
+            <button type="submit" class="btn btn-outline-danger">토픽 삭제</button>
+        </form>
     </header>
 
     <div class="conversation-history mb-5">
@@ -45,7 +56,13 @@
             <!-- 질문 영역 -->
             <div class="card question-card mb-2">
                 <div class="card-body">
-                    <h5 class="card-title text-primary">질문</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title text-primary mb-0">질문</h5>
+                        <form th:action="@{/questions/{id}/delete(id=${question.id})}" method="post" onsubmit="return confirm('이 질문을 삭제하시겠습니까?');">
+                            <input type="hidden" name="topicId" th:value="${topic.id}"/>
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none">질문 삭제</button>
+                        </form>
+                    </div>
                     <p class="card-text" th:text="${question.content}"></p>
                     <p class="text-muted text-end small" th:text="${#temporals.format(question.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
                 </div>
@@ -55,7 +72,7 @@
             <div th:if="${question.answer}" class="card answer-card mb-2 ms-4">
                 <div class="card-body">
                     <h5 class="card-title text-success">AI 답변</h5>
-                    <pre class="card-text" style="white-space: pre-wrap;" th:text="${question.answer.aiContent}"></pre>
+                    <div class="markdown-content" th:attr="data-markdown=${question.answer.aiContent}"></div>
                 </div>
             </div>
             <div th:unless="${question.answer}" class="alert alert-warning ms-4">
@@ -63,17 +80,28 @@
             </div>
 
             <!-- 요약 영역 -->
-            <div th:if="${question.answer}" class="card summary-card mb-2 ms-5">
+            <div th:if="${question.answer}" class="card summary-card mb-2 ms-5 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title text-warning">나만의 요약</h5>
-                    <form th:action="@{/topics/{tId}/questions/{qId}/summary(tId=${topic.id}, qId=${question.id})}" method="post">
+                    <h5 class="card-title text-warning">나만의 요약 및 AI 검증</h5>
+                    <form method="post">
                         <input type="hidden" name="answerId" th:value="${question.answer.id}"/>
                         <div class="mb-2">
-                            <textarea class="form-control form-control-sm" name="userSummary" rows="2" 
-                                      placeholder="이해한 내용을 요약해보세요." th:text="${question.answer.userSummary}"></textarea>
+                            <textarea class="form-control form-control-sm" name="userSummary" rows="3" 
+                                      placeholder="이해한 내용을 요약해보세요. AI가 검증해드립니다." th:text="${question.answer.userSummary}"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-sm btn-outline-warning">요약 저장</button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" th:formaction="@{/topics/{tId}/questions/{qId}/summary/save(tId=${topic.id}, qId=${question.id})}" 
+                                    class="btn btn-sm btn-outline-secondary">저장</button>
+                            <button type="submit" th:formaction="@{/topics/{tId}/questions/{qId}/summary/validate(tId=${topic.id}, qId=${question.id})}" 
+                                    class="btn btn-sm btn-warning">AI 피드백 받기</button>
+                        </div>
                     </form>
+
+                    <!-- AI 피드백 표시 -->
+                    <div th:if="${question.answer.aiFeedback}" class="mt-3 p-3 bg-light border-start border-info border-4">
+                        <h6 class="text-info"><i class="bi bi-info-circle-fill"></i> AI 피드백</h6>
+                        <div class="markdown-content small" th:attr="data-markdown=${question.answer.aiFeedback}"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -98,7 +126,7 @@
     </div>
 
     <div class="mt-4 text-center">
-        <a href="/topics/new" class="btn btn-outline-secondary">목록으로 (준비 중)</a>
+        <a href="/topics" class="btn btn-outline-secondary">목록으로</a>
     </div>
 </main>
 
@@ -110,5 +138,19 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const markdownElements = document.querySelectorAll('.markdown-content');
+        markdownElements.forEach(el => {
+            const rawMarkdown = el.getAttribute('data-markdown');
+            if (rawMarkdown) {
+                const cleanHtml = DOMPurify.sanitize(marked.parse(rawMarkdown));
+                el.innerHTML = cleanHtml;
+                el.classList.add('markdown-body');
+            }
+        });
+    });
+</script>
 </body>
 </html>

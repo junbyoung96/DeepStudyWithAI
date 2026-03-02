@@ -32,11 +32,20 @@ public class TopicService {
         return topicRepository.save(topic);
     }
 
+    public List<Topic> getAllTopics() {
+        return topicRepository.findAll();
+    }
+
     public Optional<Topic> findTopicById(Long id) {
         return topicRepository.findById(id);
     }
 
     public List<Question> getQuestionsByTopic(Topic topic) {
         return questionRepository.findByTopicOrderByCreatedAtAsc(topic);
+    }
+
+    @Transactional
+    public void deleteTopic(Long id) {
+        topicRepository.deleteById(id);
     }
 }

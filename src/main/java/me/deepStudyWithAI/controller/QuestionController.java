@@ -15,35 +15,18 @@ public class QuestionController {
 
     private final QuestionService questionService;
 
-    @GetMapping("/form")
-    public String showQuestionForm(Model model) {
-        model.addAttribute("topics", questionService.getAllTopics());
-        return "question-form";
-    }
-
-    @PostMapping
-    public String createQuestion(
-            @RequestParam String content,
-            @RequestParam Long topicId,
-            RedirectAttributes redirectAttributes
-    ) {
-        // Mono<Question>을 블로킹하여 Question 객체를 얻음
-        Question createdQuestion = questionService.createQuestionAndGetAnswer(content, topicId).block(); // .block() 사용
-
-        if (createdQuestion != null) {
-            redirectAttributes.addFlashAttribute("message", "질문이 성공적으로 등록되었고 AI 답변이 생성되었습니다.");
-            return "redirect:/questions/" + createdQuestion.getId();
-        } else {
-            redirectAttributes.addFlashAttribute("error", "질문 등록 및 AI 답변 생성에 실패했습니다.");
-            return "redirect:/questions/form";
-        }
-    }
-
     @GetMapping("/{id}")
     public String getQuestionDetail(@PathVariable Long id, Model model) {
         Question question = questionService.getQuestionWithAnswer(id);
         model.addAttribute("question", question);
         return "question-detail"; // question-detail.html 템플릿 필요
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteQuestion(@PathVariable Long id, @RequestParam Long topicId, RedirectAttributes redirectAttributes) {
+        questionService.deleteQuestion(id);
+        redirectAttributes.addFlashAttribute("message", "질문이 삭제되었습니다.");
+        return "redirect:/topics/" + topicId;
     }
 
     @PostMapping("/{id}/summary")
@@ -53,7 +36,7 @@ public class QuestionController {
             @RequestParam("userSummary") String userSummary,
             RedirectAttributes redirectAttributes
     ) {
-        questionService.saveSummary(answerId, userSummary);
+        questionService.validateAndSaveSummary(answerId, userSummary).block();
         redirectAttributes.addFlashAttribute("message", "요약이 성공적으로 저장되었습니다.");
         return "redirect:/questions/" + questionId;
     }

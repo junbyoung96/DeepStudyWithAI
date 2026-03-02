@@ -31,7 +31,7 @@ public class OpenAiService {
 
     public Mono<String> getChatResponseWithMessages(List<OpenAiChatRequest.Message> messages) {
         OpenAiChatRequest request = OpenAiChatRequest.builder()
-                .model("gpt-3.5-turbo")
+                .model("gpt-4o-mini")
                 .messages(messages)
                 .build();
 

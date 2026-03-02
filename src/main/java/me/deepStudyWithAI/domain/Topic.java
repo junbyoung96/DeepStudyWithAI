@@ -25,10 +25,10 @@ public class Topic extends BaseEntity {
     private Topic parent;
 
     // 하위 토픽
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Topic> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "topic")
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
     public Topic(String title) {

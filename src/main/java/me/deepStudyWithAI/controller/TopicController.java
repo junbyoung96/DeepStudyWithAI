@@ -20,6 +20,12 @@ public class TopicController {
     private final TopicService topicService;
     private final QuestionService questionService;
 
+    @GetMapping
+    public String listTopics(Model model) {
+        model.addAttribute("topics", topicService.getAllTopics());
+        return "topic-list";
+    }
+
     @GetMapping("/new")
     public String picForm(Model model) {
         model.addAttribute("topics", questionService.getAllTopics()); // 기존 토픽 목록 추가
@@ -49,6 +55,13 @@ public class TopicController {
         return "topic-detail";
     }
 
+    @PostMapping("/{id}/delete")
+    public String deleteTopic(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        topicService.deleteTopic(id);
+        redirectAttributes.addFlashAttribute("message", "토픽이 삭제되었습니다.");
+        return "redirect:/topics";
+    }
+
     @PostMapping("/{id}/questions")
     public String addQuestion(
             @PathVariable("id") Long topicId,
@@ -65,8 +78,8 @@ public class TopicController {
         return "redirect:/topics/" + topicId;
     }
 
-    @PostMapping("/{id}/questions/{questionId}/summary")
-    public String saveSummary(
+    @PostMapping("/{id}/questions/{questionId}/summary/save")
+    public String saveSummaryOnly(
             @PathVariable("id") Long topicId,
             @PathVariable("questionId") Long questionId,
             @RequestParam Long answerId,
@@ -75,6 +88,19 @@ public class TopicController {
     ) {
         questionService.saveSummary(answerId, userSummary);
         redirectAttributes.addFlashAttribute("message", "요약이 저장되었습니다.");
+        return "redirect:/topics/" + topicId;
+    }
+
+    @PostMapping("/{id}/questions/{questionId}/summary/validate")
+    public String saveAndValidateSummary(
+            @PathVariable("id") Long topicId,
+            @PathVariable("questionId") Long questionId,
+            @RequestParam Long answerId,
+            @RequestParam String userSummary,
+            RedirectAttributes redirectAttributes
+    ) {
+        questionService.validateAndSaveSummary(answerId, userSummary).block();
+        redirectAttributes.addFlashAttribute("message", "요약이 저장되었으며 AI 검증이 완료되었습니다.");
         return "redirect:/topics/" + topicId;
     }
 }

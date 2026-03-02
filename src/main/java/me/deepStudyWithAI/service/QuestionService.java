@@ -67,7 +67,10 @@ public class QuestionService {
         // System message for setting the persona
         messages.add(OpenAiChatRequest.Message.builder()
                 .role("system")
-                .content("You are a helpful AI assistant focused on deep study. Maintain the context of the conversation.")
+                .content("You are a helpful AI assistant focused on deep study. " +
+                        "Your goal is to provide detailed, comprehensive explanations to help the user understand the topic deeply. " +
+                        "Please format your responses using Markdown (headings, lists, bold text, etc.) for better readability. " +
+                        "All responses must be in Korean.")
                 .build());
 
         for (Question q : history) {
@@ -100,6 +103,11 @@ public class QuestionService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid question ID: " + questionId));
     }
 
+    @Transactional
+    public void deleteQuestion(Long questionId) {
+        questionRepository.deleteById(questionId);
+    }
+
     // 요약 저장
     @Transactional
     public void saveSummary(Long answerId, String userSummary) {
@@ -107,5 +115,42 @@ public class QuestionService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid answer ID: " + answerId));
         answer.updateSummary(userSummary);
         answerRepository.save(answer);
+    }
+
+    // 요약 검증 및 저장
+    @Transactional
+    public Mono<Void> validateAndSaveSummary(Long answerId, String userSummary) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid answer ID: " + answerId));
+        Question question = answer.getQuestion();
+
+        List<OpenAiChatRequest.Message> messages = new ArrayList<>();
+        messages.add(OpenAiChatRequest.Message.builder()
+                .role("system")
+                .content("You are an expert educator. Your task is to evaluate a student's summary based on the original question and the AI's answer. " +
+                        "Identify if they understood correctly, highlight any misconceptions, and provide detailed, encouraging, constructive feedback. " +
+                        "Please use Markdown formatting for clarity and provide a comprehensive evaluation in Korean.")
+                .build());
+
+        String prompt = String.format(
+                "### Original Question: %s\n\n" +
+                "### AI's Original Answer: %s\n\n" +
+                "### Student's Summary: %s\n\n" +
+                "Please evaluate the student's summary in detail and provide feedback using Markdown.",
+                question.getContent(), answer.getAiContent(), userSummary
+        );
+
+        messages.add(OpenAiChatRequest.Message.builder()
+                .role("user")
+                .content(prompt)
+                .build());
+
+        return openAiService.getChatResponseWithMessages(messages)
+                .flatMap(feedback -> {
+                    answer.updateSummary(userSummary);
+                    answer.updateFeedback(feedback);
+                    answerRepository.save(answer);
+                    return Mono.empty();
+                });
     }
 }

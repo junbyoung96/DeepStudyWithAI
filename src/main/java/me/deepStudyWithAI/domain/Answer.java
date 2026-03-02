@@ -22,6 +22,10 @@ public class Answer extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String userSummary;
 
+    // AI의 요약 검증 피드백
+    @Column(columnDefinition = "TEXT")
+    private String aiFeedback;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private Question question;
@@ -34,5 +38,9 @@ public class Answer extends BaseEntity {
 
     public void updateSummary(String userSummary) {
         this.userSummary = userSummary;
+    }
+
+    public void updateFeedback(String aiFeedback) {
+        this.aiFeedback = aiFeedback;
     }
 }
