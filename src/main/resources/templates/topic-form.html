@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +14,14 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <a class="navbar-brand" href="/topics/new">Deep Study with AI</a>
+        <a class="navbar-brand" href="/topics">Deep Study with AI</a>
+        <div class="navbar-nav me-auto">
+            <a class="nav-link active" href="/topics/new">새 토픽</a>
+        </div>
+        <div class="navbar-nav ms-auto">
+            <span class="nav-item nav-link text-light me-3" sec:authentication="name">사용자 이메일</span>
+            <a class="btn btn-outline-light btn-sm" href="/members/logout">로그아웃</a>
+        </div>
     </div>
 </nav>
 
@@ -39,7 +48,7 @@
                     <h2 class="h5 mb-0">새 토픽 생성</h2>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="/topics">
+                    <form method="post" th:action="@{/topics}">
                         <div class="mb-3">
                             <label for="topic-title" class="form-label">학습 주제 제목</label>
                             <input type="text" id="topic-title" name="title" class="form-control"

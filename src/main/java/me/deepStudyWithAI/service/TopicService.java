@@ -1,6 +1,7 @@
 package me.deepStudyWithAI.service;
 
 import lombok.RequiredArgsConstructor;
+import me.deepStudyWithAI.domain.Member;
 import me.deepStudyWithAI.domain.Question;
 import me.deepStudyWithAI.domain.Topic;
 import me.deepStudyWithAI.repository.QuestionRepository;
@@ -20,16 +21,17 @@ public class TopicService {
     private final QuestionRepository questionRepository;
 
     @Transactional
-    public Topic createTopic(String title) {
+    public Topic createTopic(String title, Member member) {
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Topic title cannot be empty.");
+            throw new IllegalArgumentException("토픽 제목은 비어 있을 수 없습니다.");
         }
-        // Optional: Check for duplicate topic names
-         if (topicRepository.findByTitle(title).isPresent()) {
-             throw new IllegalArgumentException("Topic with title '" + title + "' already exists.");
-        }
-        Topic topic = new Topic(title);
+        
+        Topic topic = new Topic(title, member);
         return topicRepository.save(topic);
+    }
+
+    public List<Topic> getTopicsByMember(Member member) {
+        return topicRepository.findByMemberOrderByCreatedAtDesc(member);
     }
 
     public List<Topic> getAllTopics() {

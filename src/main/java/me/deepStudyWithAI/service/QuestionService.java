@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,20 +25,9 @@ public class QuestionService {
     private final AnswerRepository answerRepository;
     private final OpenAiService openAiService;
 
-    // 모든 토픽 조회
-    public List<Topic> getAllTopics() {
-        return topicRepository.findAll();
-    }
-
     // 초기 질문 생성 및 AI 답변 받기
     @Transactional
     public Mono<Question> createQuestionAndGetAnswer(String content, Long topicId) {
-        return createQuestionAndGetAnswer(content, topicId, null);
-    }
-
-    // 추가 질문 생성 및 AI 답변 받기 (토픽의 모든 질문/답변 컨텍스트 포함)
-    @Transactional
-    public Mono<Question> createQuestionAndGetAnswer(String content, Long topicId, Long parentQuestionId) {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid topic ID: " + topicId));
 
@@ -94,13 +82,6 @@ public class QuestionService {
                 .build());
 
         return messages;
-    }
-
-
-    // 질문 상세 조회 (답변 포함)
-    public Question getQuestionWithAnswer(Long questionId) {
-        return questionRepository.findById(questionId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid question ID: " + questionId));
     }
 
     @Transactional
